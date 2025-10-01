@@ -1,170 +1,195 @@
-import React, { useState, useRef } from "react";
-import jsPDF from "jspdf";
+// src/SolarSavingsApp.jsx
+import React, { useState } from "react";
+import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
 
 export default function SolarSavingsApp() {
-  // ===== Inputs =====
   const [bill, setBill] = useState("");
   const [noSunDays, setNoSunDays] = useState(0);
-  const [daytime, setDaytime] = useState(false);
-  const [location, setLocation] = useState("Johor Bahru");
-  const [panels, setPanels] = useState(20);
-
-  // ===== Outputs =====
+  const [daytimeOnly, setDaytimeOnly] = useState(false);
+  const [location, setLocation] = useState("");
+  const [panels, setPanels] = useState("");
   const [results, setResults] = useState(null);
 
-  // PDF ref
-  const reportRef = useRef();
-
   const handleCalculate = () => {
-    if (!bill || isNaN(bill) || Number(bill) <= 0) {
-      alert("⚠️ Please enter a valid bill amount.");
-      return;
-    }
+    const billAmount = parseFloat(bill) || 0;
+    const qty = parseInt(panels) || 0;
 
-    // Fake calculation (replace with your logic)
-    const billNum = Number(bill);
-    const consumption = billNum * 4; // e.g. conversion factor
-    const savings = billNum * 0.6; // assume 60% saving
-    const payback = (billNum * 36) / (panels * 1000);
+    // Dummy formulas (replace later with real model)
+    const savings = billAmount * 0.35;
+    const cost = qty * 1200;
+    const roi = (savings * 12) / (cost || 1);
+    const co2 = qty * 0.45;
 
     setResults({
-      consumption,
-      previousBill: billNum,
-      newBill: billNum - savings,
       savings,
-      payback: payback.toFixed(1),
-      roi: ((savings * 12) / (panels * 1000)).toFixed(2),
+      cost,
+      roi,
+      co2,
+      warnings:
+        noSunDays > 10
+          ? "⚠️ Too many cloudy days may reduce efficiency."
+          : null,
     });
   };
 
-  const handleDownloadPDF = async () => {
-    const input = reportRef.current;
+  const handleDownload = async () => {
+    const input = document.getElementById("results-card");
     const canvas = await html2canvas(input);
     const imgData = canvas.toDataURL("image/png");
     const pdf = new jsPDF("p", "mm", "a4");
     pdf.addImage(imgData, "PNG", 10, 10, 190, 0);
-    pdf.save("solar_savings_report.pdf");
+    pdf.save("solar-report.pdf");
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col items-center p-6">
-      <h1 className="text-3xl font-bold mb-6">☀️ Solar Savings Calculator</h1>
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-green-100 p-4 flex flex-col gap-6 max-w-md mx-auto">
+      {/* Header */}
+      <h1 className="text-2xl font-bold text-center text-green-800">
+        🌞 Solar Savings Calculator
+      </h1>
 
-      {/* ===== Inputs Section ===== */}
-      <div className="bg-white shadow-lg rounded-2xl p-6 w-full max-w-2xl mb-6">
-        <h2 className="text-xl font-semibold mb-4">Inputs</h2>
+      {/* Inputs */}
+      <div className="bg-white rounded-xl shadow-md p-5">
+        <h2 className="text-lg font-semibold text-gray-700 mb-4">Inputs</h2>
 
-        <label className="block mb-2">
-          Monthly Electricity Bill (MYR):
+        {/* Monthly Bill */}
+        <div className="mb-4">
+          <label className="block text-sm text-gray-600 mb-1">
+            Monthly Bill (RM)
+          </label>
           <input
             type="number"
             value={bill}
             onChange={(e) => setBill(e.target.value)}
-            className="w-full p-2 border rounded mt-1"
+            className="w-full rounded-lg border border-gray-300 p-2 focus:ring-2 focus:ring-green-500"
+            placeholder="e.g. 300"
           />
-        </label>
+        </div>
 
-        <label className="block mb-2">
-          No-sun Days:
-          <select
+        {/* No-sun Days */}
+        <div className="mb-4">
+          <label className="block text-sm text-gray-600 mb-1">
+            No-Sun Days / Month
+          </label>
+          <input
+            type="number"
             value={noSunDays}
-            onChange={(e) => setNoSunDays(Number(e.target.value))}
-            className="w-full p-2 border rounded mt-1"
-          >
-            <option value={0}>0</option>
-            <option value={15}>15</option>
-            <option value={30}>30</option>
-          </select>
-        </label>
+            onChange={(e) => setNoSunDays(e.target.value)}
+            className="w-full rounded-lg border border-gray-300 p-2 focus:ring-2 focus:ring-green-500"
+            placeholder="e.g. 5"
+          />
+        </div>
 
-        <label className="block mb-2 flex items-center gap-2">
+        {/* Daytime toggle */}
+        <div className="flex items-center gap-2 mb-4">
           <input
             type="checkbox"
-            checked={daytime}
-            onChange={(e) => setDaytime(e.target.checked)}
+            checked={daytimeOnly}
+            onChange={(e) => setDaytimeOnly(e.target.checked)}
+            className="h-4 w-4"
           />
-          Enable daytime consumption (20%)
-        </label>
+          <span className="text-sm text-gray-700">Daytime Usage Only</span>
+        </div>
 
-        <label className="block mb-2">
-          Location:
+        {/* Location */}
+        <div className="mb-4">
+          <label className="block text-sm text-gray-600 mb-1">Location</label>
           <select
             value={location}
             onChange={(e) => setLocation(e.target.value)}
-            className="w-full p-2 border rounded mt-1"
+            className="w-full rounded-lg border border-gray-300 p-2 focus:ring-2 focus:ring-green-500"
           >
-            <option>Johor Bahru</option>
-            <option>BP/Muar</option>
-            <option>Kuala Lumpur</option>
-            <option>North</option>
+            <option value="">Select...</option>
+            <option value="kl">Kuala Lumpur</option>
+            <option value="penang">Penang</option>
+            <option value="jb">Johor Bahru</option>
           </select>
-        </label>
+        </div>
 
-        <label className="block mb-2">
-          Number of Panels: {panels}
+        {/* Panels */}
+        <div className="mb-4">
+          <label className="block text-sm text-gray-600 mb-1">
+            Number of Panels
+          </label>
           <input
-            type="range"
-            min={10}
-            max={40}
-            step={1}
+            type="number"
             value={panels}
-            onChange={(e) => setPanels(Number(e.target.value))}
-            className="w-full"
+            onChange={(e) => setPanels(e.target.value)}
+            className="w-full rounded-lg border border-gray-300 p-2 focus:ring-2 focus:ring-green-500"
+            placeholder="e.g. 10"
           />
-        </label>
+        </div>
 
         <button
           onClick={handleCalculate}
-          className="bg-blue-600 text-white px-4 py-2 rounded mt-4 hover:bg-blue-700"
+          className="w-full bg-green-600 text-white rounded-lg py-2 mt-2 hover:bg-green-700 transition"
         >
           Calculate
         </button>
       </div>
 
-      {/* ===== Outputs Section ===== */}
-      {results && (
-        <div
-          ref={reportRef}
-          className="bg-white shadow-lg rounded-2xl p-6 w-full max-w-2xl"
-        >
-          <h2 className="text-xl font-semibold mb-4">Results</h2>
+      {/* Outputs */}
+      <div id="results-card" className="bg-white rounded-xl shadow-md p-5">
+        <h2 className="text-lg font-semibold text-gray-700 mb-4">Results</h2>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="p-4 bg-gray-50 rounded-xl shadow">
-              <p className="text-gray-500">Consumption</p>
-              <p className="font-bold">{results.consumption} kWh/month</p>
+        {!results ? (
+          <p className="text-gray-500 text-center">
+            Enter inputs and tap Calculate.
+          </p>
+        ) : (
+          <div className="space-y-4">
+            <div className="bg-green-50 rounded-lg p-3 shadow-sm">
+              <p className="font-medium">💰 Estimated Savings</p>
+              <p className="text-xl font-bold text-green-700">
+                RM {results.savings.toFixed(2)}
+              </p>
             </div>
-            <div className="p-4 bg-gray-50 rounded-xl shadow">
-              <p className="text-gray-500">Previous Bill</p>
-              <p className="font-bold">RM {results.previousBill}</p>
+
+            <div className="bg-green-50 rounded-lg p-3 shadow-sm">
+              <p className="font-medium">⚡ Estimated Cost</p>
+              <p className="text-xl font-bold text-green-700">
+                RM {results.cost.toFixed(2)}
+              </p>
             </div>
-            <div className="p-4 bg-gray-50 rounded-xl shadow">
-              <p className="text-gray-500">New Bill</p>
-              <p className="font-bold">RM {results.newBill.toFixed(2)}</p>
+
+            <div className="bg-green-50 rounded-lg p-3 shadow-sm">
+              <p className="font-medium">📈 ROI</p>
+              <p className="text-xl font-bold text-green-700">
+                {(results.roi * 100).toFixed(1)}%
+              </p>
             </div>
-            <div className="p-4 bg-gray-50 rounded-xl shadow">
-              <p className="text-gray-500">Savings</p>
-              <p className="font-bold">RM {results.savings.toFixed(2)}</p>
+
+            <div className="bg-green-50 rounded-lg p-3 shadow-sm">
+              <p className="font-medium">🌍 CO₂ Reduction</p>
+              <p className="text-xl font-bold text-green-700">
+                {results.co2.toFixed(1)} tons/year
+              </p>
             </div>
-            <div className="p-4 bg-gray-50 rounded-xl shadow">
-              <p className="text-gray-500">Payback (years)</p>
-              <p className="font-bold">{results.payback}</p>
+
+            {results.warnings && (
+              <div className="bg-red-100 text-red-700 p-3 rounded-lg">
+                {results.warnings}
+              </div>
+            )}
+
+            <div className="flex justify-center">
+              <img
+                src="https://via.placeholder.com/250x120.png?text=Solar+Panels"
+                alt="Solar Illustration"
+                className="rounded-md shadow-md"
+              />
             </div>
-            <div className="p-4 bg-gray-50 rounded-xl shadow">
-              <p className="text-gray-500">ROI</p>
-              <p className="font-bold">{results.roi}</p>
-            </div>
+
+            <button
+              onClick={handleDownload}
+              className="w-full bg-blue-600 text-white rounded-lg py-2 mt-2 hover:bg-blue-700 transition"
+            >
+              Download PDF
+            </button>
           </div>
-
-          <button
-            onClick={handleDownloadPDF}
-            className="bg-green-600 text-white px-4 py-2 rounded mt-6 hover:bg-green-700"
-          >
-            📄 Download Report
-          </button>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
