@@ -2,39 +2,37 @@
 import React, { useState } from "react";
 import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
+import { Sun, Package, BarChart, Wrench } from "lucide-react";
 
 export default function SolarSavingsApp() {
   const [bill, setBill] = useState("");
-  const [noSunDays, setNoSunDays] = useState(0);
-  const [daytimeOnly, setDaytimeOnly] = useState(false);
-  const [location, setLocation] = useState("");
-  const [panels, setPanels] = useState("");
+  const [panels, setPanels] = useState(10);
   const [results, setResults] = useState(null);
 
   const handleCalculate = () => {
     const billAmount = parseFloat(bill) || 0;
-    const qty = parseInt(panels) || 0;
 
-    // Dummy formulas (replace later with real model)
-    const savings = billAmount * 0.35;
-    const cost = qty * 1200;
-    const roi = (savings * 12) / (cost || 1);
-    const co2 = qty * 0.45;
+    // Dummy formulas (replace with real later)
+    const consumption = billAmount * 1.6;
+    const newBill = 0;
+    const paybackCash = 5.57;
+    const paybackCC = 6.16;
 
     setResults({
-      savings,
-      cost,
-      roi,
-      co2,
-      warnings:
-        noSunDays > 10
-          ? "⚠️ Too many cloudy days may reduce efficiency."
-          : null,
+      consumption,
+      billAmount,
+      newBill,
+      paybackCash,
+      paybackCC,
+      panelsNeeded: 4,
+      packageQty: panels,
+      savingPerPV: 28.03,
+      installedKwp: panels * 0.615,
     });
   };
 
   const handleDownload = async () => {
-    const input = document.getElementById("results-card");
+    const input = document.getElementById("results-section");
     const canvas = await html2canvas(input);
     const imgData = canvas.toDataURL("image/png");
     const pdf = new jsPDF("p", "mm", "a4");
@@ -43,153 +41,117 @@ export default function SolarSavingsApp() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-green-100 p-4 flex flex-col gap-6 max-w-md mx-auto">
-      {/* Header */}
-      <h1 className="text-2xl font-bold text-center text-green-800">
-        🌞 Solar Savings Calculator
-      </h1>
+    <div className="min-h-screen bg-yellow-50 p-4">
+      <div className="max-w-3xl mx-auto space-y-6">
 
-      {/* Inputs */}
-      <div className="bg-white rounded-xl shadow-md p-5">
-        <h2 className="text-lg font-semibold text-gray-700 mb-4">Inputs</h2>
+        {/* Header Section */}
+        <div className="bg-white rounded-xl shadow p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Sun className="text-yellow-500" />
+            <h1 className="text-2xl font-bold">Solar Savings Calculator</h1>
+          </div>
 
-        {/* Monthly Bill */}
-        <div className="mb-4">
-          <label className="block text-sm text-gray-600 mb-1">
-            Monthly Bill (RM)
-          </label>
-          <input
-            type="number"
-            value={bill}
-            onChange={(e) => setBill(e.target.value)}
-            className="w-full rounded-lg border border-gray-300 p-2 focus:ring-2 focus:ring-green-500"
-            placeholder="e.g. 300"
-          />
-        </div>
-
-        {/* No-sun Days */}
-        <div className="mb-4">
-          <label className="block text-sm text-gray-600 mb-1">
-            No-Sun Days / Month
-          </label>
-          <input
-            type="number"
-            value={noSunDays}
-            onChange={(e) => setNoSunDays(e.target.value)}
-            className="w-full rounded-lg border border-gray-300 p-2 focus:ring-2 focus:ring-green-500"
-            placeholder="e.g. 5"
-          />
-        </div>
-
-        {/* Daytime toggle */}
-        <div className="flex items-center gap-2 mb-4">
-          <input
-            type="checkbox"
-            checked={daytimeOnly}
-            onChange={(e) => setDaytimeOnly(e.target.checked)}
-            className="h-4 w-4"
-          />
-          <span className="text-sm text-gray-700">Daytime Usage Only</span>
-        </div>
-
-        {/* Location */}
-        <div className="mb-4">
-          <label className="block text-sm text-gray-600 mb-1">Location</label>
-          <select
-            value={location}
-            onChange={(e) => setLocation(e.target.value)}
-            className="w-full rounded-lg border border-gray-300 p-2 focus:ring-2 focus:ring-green-500"
-          >
-            <option value="">Select...</option>
-            <option value="kl">Kuala Lumpur</option>
-            <option value="penang">Penang</option>
-            <option value="jb">Johor Bahru</option>
-          </select>
-        </div>
-
-        {/* Panels */}
-        <div className="mb-4">
-          <label className="block text-sm text-gray-600 mb-1">
-            Number of Panels
-          </label>
-          <input
-            type="number"
-            value={panels}
-            onChange={(e) => setPanels(e.target.value)}
-            className="w-full rounded-lg border border-gray-300 p-2 focus:ring-2 focus:ring-green-500"
-            placeholder="e.g. 10"
-          />
-        </div>
-
-        <button
-          onClick={handleCalculate}
-          className="w-full bg-green-600 text-white rounded-lg py-2 mt-2 hover:bg-green-700 transition"
-        >
-          Calculate
-        </button>
-      </div>
-
-      {/* Outputs */}
-      <div id="results-card" className="bg-white rounded-xl shadow-md p-5">
-        <h2 className="text-lg font-semibold text-gray-700 mb-4">Results</h2>
-
-        {!results ? (
-          <p className="text-gray-500 text-center">
-            Enter inputs and tap Calculate.
-          </p>
-        ) : (
-          <div className="space-y-4">
-            <div className="bg-green-50 rounded-lg p-3 shadow-sm">
-              <p className="font-medium">💰 Estimated Savings</p>
-              <p className="text-xl font-bold text-green-700">
-                RM {results.savings.toFixed(2)}
-              </p>
-            </div>
-
-            <div className="bg-green-50 rounded-lg p-3 shadow-sm">
-              <p className="font-medium">⚡ Estimated Cost</p>
-              <p className="text-xl font-bold text-green-700">
-                RM {results.cost.toFixed(2)}
-              </p>
-            </div>
-
-            <div className="bg-green-50 rounded-lg p-3 shadow-sm">
-              <p className="font-medium">📈 ROI</p>
-              <p className="text-xl font-bold text-green-700">
-                {(results.roi * 100).toFixed(1)}%
-              </p>
-            </div>
-
-            <div className="bg-green-50 rounded-lg p-3 shadow-sm">
-              <p className="font-medium">🌍 CO₂ Reduction</p>
-              <p className="text-xl font-bold text-green-700">
-                {results.co2.toFixed(1)} tons/year
-              </p>
-            </div>
-
-            {results.warnings && (
-              <div className="bg-red-100 text-red-700 p-3 rounded-lg">
-                {results.warnings}
-              </div>
-            )}
-
-            <div className="flex justify-center">
-              <img
-                src="https://via.placeholder.com/250x120.png?text=Solar+Panels"
-                alt="Solar Illustration"
-                className="rounded-md shadow-md"
+          <div className="flex flex-col md:flex-row gap-6 items-center">
+            <img
+              src="https://via.placeholder.com/200x200.png?text=Logo"
+              alt="Logo"
+              className="rounded-lg shadow"
+            />
+            <div className="flex-1">
+              <label className="block text-sm text-gray-600 mb-2">
+                Monthly Electricity Bill (MYR):
+              </label>
+              <input
+                type="number"
+                value={bill}
+                onChange={(e) => setBill(e.target.value)}
+                className="w-full rounded-lg border border-gray-300 p-2 mb-3 focus:ring-2 focus:ring-green-500"
+                placeholder="e.g. 123"
               />
+              <button
+                onClick={handleCalculate}
+                className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
+              >
+                Calculate
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Panel Selection */}
+        <div className="bg-white rounded-xl shadow p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Package className="text-orange-500" />
+            <h2 className="text-xl font-semibold">
+              Solar Panel Package Selection
+            </h2>
+          </div>
+
+          <label className="block text-sm mb-2">
+            Number of panels: <span className="font-semibold">{panels}</span>
+          </label>
+          <input
+            type="range"
+            min="1"
+            max="20"
+            value={panels}
+            onChange={(e) => setPanels(Number(e.target.value))}
+            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-green-600"
+          />
+        </div>
+
+        {/* Results */}
+        {results && (
+          <div id="results-section" className="space-y-6">
+
+            {/* Key Metrics */}
+            <div className="bg-white rounded-xl shadow p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <BarChart className="text-blue-500" />
+                <h2 className="text-xl font-semibold">Key Metrics</h2>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <MetricCard label="Consumption" value={`${results.consumption.toFixed(2)} kWh`} />
+                <MetricCard label="Previous Bill" value={`RM ${results.billAmount.toFixed(2)}`} />
+                <MetricCard label="New Bill" value={`RM ${results.newBill.toFixed(2)}`} />
+                <MetricCard label="Payback (CC)" value={`${results.paybackCC} yrs`} />
+                <MetricCard label="Payback (Cash)" value={`${results.paybackCash} yrs`} />
+              </div>
+            </div>
+
+            {/* Panel Summary */}
+            <div className="bg-white rounded-xl shadow p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <Wrench className="text-purple-500" />
+                <h2 className="text-xl font-semibold">Panel & Savings Summary</h2>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <MetricCard label="Panels Needed" value={`${results.panelsNeeded} panels`} />
+                <MetricCard label="Package Qty" value={`${results.packageQty} panels`} />
+                <MetricCard label="Saving per PV" value={`RM ${results.savingPerPV}`} />
+                <MetricCard label="Installed kWp" value={`${results.installedKwp.toFixed(2)} kWp`} />
+              </div>
             </div>
 
             <button
               onClick={handleDownload}
-              className="w-full bg-blue-600 text-white rounded-lg py-2 mt-2 hover:bg-blue-700 transition"
+              className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700"
             >
               Download PDF
             </button>
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+// Small metric card component
+function MetricCard({ label, value }) {
+  return (
+    <div className="bg-gray-50 p-3 rounded-lg text-center shadow-sm">
+      <p className="text-sm text-gray-600">{label}</p>
+      <p className="text-lg font-bold text-gray-800">{value}</p>
     </div>
   );
 }
